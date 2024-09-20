@@ -83,32 +83,17 @@ public final class MetalCameraSession: NSObject {
      Starts the capture session. Call this method to start receiving delegate updates with the sample buffers.
      */
     public func start() {
-
-        setupAssetReader()
-
-
-//        requestCameraAccess()
-//
-//        captureSessionQueue.async(execute: {
-//            do {
-//                self.captureSession.beginConfiguration()
-//                try self.initializeInputDevice()
-//                try self.initializeOutputData()
-//                self.captureSession.commitConfiguration()
-//                try self.initializeTextureCache()
-//                self.captureSession.startRunning()
-//                self.state = .streaming
-//            }
-//            catch let error as MetalCameraSessionError {
-//                self.handleError(error)
-//            }
-//            catch {
-//                /**
-//                 * We only throw `MetalCameraSessionError` errors.
-//                 */
-//            }
-//        })
-    }
+         captureSessionQueue.async(execute: {
+             do {
+                 try self.initializeTextureCache()
+                 self.setupAssetReader()  // Запуск видео вместо камеры
+             } catch let error as MetalCameraSessionError {
+                 self.handleError(error)
+             } catch {
+                 // Мы обрабатываем только MetalCameraSessionError
+             }
+         })
+     }
 
     /**
      Stops the capture session.
@@ -264,7 +249,6 @@ public final class MetalCameraSession: NSObject {
         }
         
         self.outputData = outputData
-
     }
     
     /**
@@ -384,49 +368,91 @@ extension MetalCameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
 import AVFoundation
 
 extension MetalCameraSession {
-
+    
     func setupAssetReader() {
-        guard let videoURL = Bundle.main.url(forResource: "demoVideo", withExtension: "mp4") else {
-            print("Video file not found.")
-            return
-        }
-
-        let asset = AVAsset(url: videoURL)
-
-        do {
-            let assetReader = try AVAssetReader(asset: asset)
-
-            guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-                print("No video track found in the asset.")
+            guard let videoURL = Bundle.main.url(forResource: "demoVideo", withExtension: "mp4") else {
+                print("Video file not found.")
                 return
             }
 
-            let videoOutputSettings: [String: Any] = [
-                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
-                kCVPixelBufferMetalCompatibilityKey as String: true
-            ]
-            let videoOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: videoOutputSettings)
+            let asset = AVAsset(url: videoURL)
 
-            if assetReader.canAdd(videoOutput) {
-                assetReader.add(videoOutput)
-            } else {
-                print("Cannot add video output to asset reader.")
-                return
+            do {
+                let assetReader = try AVAssetReader(asset: asset)
+
+                guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+                    print("No video track found in the asset.")
+                    return
+                }
+
+                let videoOutputSettings: [String: Any] = [
+                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+                    kCVPixelBufferMetalCompatibilityKey as String: true
+                ]
+                let videoOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: videoOutputSettings)
+
+                if assetReader.canAdd(videoOutput) {
+                    assetReader.add(videoOutput)
+                } else {
+                    print("Cannot add video output to asset reader.")
+                    return
+                }
+
+                assetReader.startReading()
+
+                while let sampleBuffer = videoOutput.copyNextSampleBuffer() {
+                    let texture = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
+                    let timestamp = try self.timestamp(sampleBuffer: sampleBuffer)
+                    delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestamp)
+                }
+
+            } catch {
+                print("Error setupAssetReader: \(error)")
             }
-
-            assetReader.startReading()
-
-            try! self.initializeTextureCache()
-
-            while let sampleBuffer = videoOutput.copyNextSampleBuffer() {
-//                debugPrint("did copyNextSampleBuffer")
-                let texture = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
-                let timestamp = try self.timestamp(sampleBuffer: sampleBuffer) // возможно в этом проблема тк в видео уже есть таймстемп
-                delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestamp)
-            }
-
-        } catch {
-            print("Error setupAssetReader: \(error)")
         }
-    }
+
+//    func setupAssetReader() {
+//        guard let videoURL = Bundle.main.url(forResource: "demoVideo", withExtension: "mp4") else {
+//            print("Video file not found.")
+//            return
+//        }
+//
+//        let asset = AVAsset(url: videoURL)
+//
+//        do {
+//            let assetReader = try AVAssetReader(asset: asset)
+//
+//            guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+//                print("No video track found in the asset.")
+//                return
+//            }
+//
+//            let videoOutputSettings: [String: Any] = [
+//                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
+//                kCVPixelBufferMetalCompatibilityKey as String: true
+//            ]
+//            let videoOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: videoOutputSettings)
+//
+//            if assetReader.canAdd(videoOutput) {
+//                assetReader.add(videoOutput)
+//            } else {
+//                print("Cannot add video output to asset reader.")
+//                return
+//            }
+//
+//            assetReader.startReading()
+//
+//            try! self.initializeTextureCache()
+//
+//            while let sampleBuffer = videoOutput.copyNextSampleBuffer() {
+////                debugPrint("did copyNextSampleBuffer")
+//                let texture = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
+//                let timestamp = try self.timestamp(sampleBuffer: sampleBuffer) // возможно в этом проблема тк в видео уже есть таймстемп
+//                delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestamp)
+//            }
+//
+//        } catch {
+//            print("Error setupAssetReader: \(error)")
+//        }
+//    }
 }

@@ -50,6 +50,7 @@ internal final class CameraViewController: MTKViewController {
 extension CameraViewController: MetalCameraSessionDelegate {
     func metalCameraSession(_ session: MetalCameraSession, didReceiveFrameAsTextures textures: [MTLTexture], withTimestamp timestamp: Double) {
         self.texture = textures[0]
+        self.metalView.draw()
     }
     
     func metalCameraSession(_ cameraSession: MetalCameraSession, didUpdateState state: MetalCameraSessionState, error: MetalCameraSessionError?) {
