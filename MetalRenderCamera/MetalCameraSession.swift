@@ -49,16 +49,16 @@ public final class MetalCameraSession: NSObject {
                 let videoConnection = outputData.connection(with: .video),
                 videoConnection.isVideoOrientationSupported
             else { return }
-
+            
             videoConnection.videoOrientation = frameOrientation
         }
     }
     /// Requested capture device position, e.g. camera
     public let captureDevicePosition: AVCaptureDevice.Position
-
+    
     /// Delegate that will be notified about state changes and new frames
     public var delegate: MetalCameraSessionDelegate?
-
+    
     /// Pixel format to be used for grabbing camera data and converting textures
     public let pixelFormat: MetalCameraPixelFormat
     
@@ -75,7 +75,7 @@ public final class MetalCameraSession: NSObject {
         self.captureDevicePosition = captureDevicePosition
         self.delegate = delegate
         super.init();
-
+        
         NotificationCenter.default.addObserver(self, selector: #selector(captureSessionRuntimeError), name: NSNotification.Name.AVCaptureSessionRuntimeError, object: nil)
     }
     
@@ -83,26 +83,26 @@ public final class MetalCameraSession: NSObject {
      Starts the capture session. Call this method to start receiving delegate updates with the sample buffers.
      */
     public func start() {
-         captureSessionQueue.async(execute: {
-             do {
-                 try self.initializeTextureCache()
-                 self.setupAssetReader()  // Запуск видео вместо камеры
-             } catch let error as MetalCameraSessionError {
-                 self.handleError(error)
-             } catch {
-                 // Мы обрабатываем только MetalCameraSessionError
-             }
-         })
-     }
-
+        captureSessionQueue.async(execute: {
+            do {
+                try self.initializeTextureCache()
+                self.setupAssetReader()  // Запуск видео вместо камеры
+            } catch let error as MetalCameraSessionError {
+                self.handleError(error)
+            } catch {
+                // Мы обрабатываем только MetalCameraSessionError
+            }
+        })
+    }
+    
     /**
      Stops the capture session.
      */
     public func stop() {
-//        captureSessionQueue.async(execute: {
-//            self.captureSession.stopRunning()
-//            self.state = .stopped
-//        })
+        //        captureSessionQueue.async(execute: {
+        //            self.captureSession.stopRunning()
+        //            self.state = .stopped
+        //        })
     }
     
     // MARK: Private properties and methods
@@ -115,34 +115,34 @@ public final class MetalCameraSession: NSObject {
             delegate?.metalCameraSession(self, didUpdateState: state, error: nil)
         }
     }
-
+    
     /// `AVFoundation` capture session object.
     fileprivate var captureSession = AVCaptureSession()
-
+    
     /// Our internal wrapper for the `AVCaptureDevice`. Making it internal to stub during testing.
     internal var captureDevice = MetalCameraCaptureDevice()
-
+    
     /// Dispatch queue for capture session events.
     fileprivate var captureSessionQueue = DispatchQueue(label: "MetalCameraSessionQueue", attributes: [])
-
+    
 #if arch(i386) || arch(x86_64)
 #else
     /// Texture cache we will use for converting frame images to textures
     internal var textureCache: CVMetalTextureCache?
 #endif
-
+    
     /// `MTLDevice` we need to initialize texture cache
     fileprivate var metalDevice = MTLCreateSystemDefaultDevice()
-
+    
     /// Current capture input device.
     internal var inputDevice: AVCaptureDeviceInput? {
         didSet {
             if let oldValue = oldValue {
                 captureSession.removeInput(oldValue)
             }
-
+            
             guard let inputDevice = inputDevice else { return }
-
+            
             captureSession.addInput(inputDevice)
         }
     }
@@ -153,13 +153,13 @@ public final class MetalCameraSession: NSObject {
             if let oldValue = oldValue {
                 captureSession.removeOutput(oldValue)
             }
-
+            
             guard let outputData = outputData else { return }
             
             captureSession.addOutput(outputData)
         }
     }
-
+    
     /**
      Requests access to camera hardware.
      */
@@ -181,10 +181,10 @@ public final class MetalCameraSession: NSObject {
         if error.isStreamingError() {
             state = .error
         }
-
+        
         delegate?.metalCameraSession(self, didUpdateState: state, error: error)
     }
-
+    
     /**
      initialized the texture cache. We use it to convert frames into textures.
      
@@ -201,7 +201,7 @@ public final class MetalCameraSession: NSObject {
         }
 #endif
     }
-
+    
     /**
      initializes capture input device with specified media type and device position.
      
@@ -210,11 +210,11 @@ public final class MetalCameraSession: NSObject {
      */
     fileprivate func initializeInputDevice() throws {
         var captureInput: AVCaptureDeviceInput!
-
+        
         guard let inputDevice = captureDevice.device(for: .video, with: captureDevicePosition) else {
             throw MetalCameraSessionError.requestedHardwareNotFound
         }
-
+        
         do {
             captureInput = try AVCaptureDeviceInput(device: inputDevice)
         }
@@ -237,7 +237,7 @@ public final class MetalCameraSession: NSObject {
      */
     fileprivate func initializeOutputData() throws {
         let outputData = AVCaptureVideoDataOutput()
-
+        
         outputData.videoSettings = [
             kCVPixelBufferPixelFormatTypeKey as String: Int(pixelFormat.coreVideoType)
         ]
@@ -268,10 +268,10 @@ public final class MetalCameraSession: NSObject {
 
 // MARK: - AVCaptureVideoDataOutputSampleBufferDelegate
 extension MetalCameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
-
+    
 #if arch(i386) || arch(x86_64)
 #else
-
+    
     /**
      Converts a sample buffer received from camera to a Metal texture
      
@@ -300,7 +300,7 @@ extension MetalCameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
         var imageTexture: CVMetalTexture?
         
         let result = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, textureCache, imageBuffer, nil, pixelFormat, width, height, planeIndex, &imageTexture)
-
+        
         guard
             let unwrappedImageTexture = imageTexture,
             let texture = CVMetalTextureGetTexture(unwrappedImageTexture),
@@ -308,7 +308,7 @@ extension MetalCameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
         else {
             throw MetalCameraSessionError.failedToCreateTextureFromImage
         }
-
+        
         return texture
     }
     
@@ -360,7 +360,7 @@ extension MetalCameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
              */
         }
     }
-
+    
 #endif
     
 }
@@ -370,89 +370,44 @@ import AVFoundation
 extension MetalCameraSession {
     
     func setupAssetReader() {
-            guard let videoURL = Bundle.main.url(forResource: "demoVideo", withExtension: "mp4") else {
-                print("Video file not found.")
+        guard let videoURL = Bundle.main.url(forResource: "demoVideo", withExtension: "mp4") else {
+            print("Video file not found.")
+            return
+        }
+        
+        let asset = AVAsset(url: videoURL)
+        
+        do {
+            let assetReader = try AVAssetReader(asset: asset)
+            
+            guard let videoTrack = asset.tracks(withMediaType: .video).first else {
+                print("No video track found in the asset.")
                 return
             }
-
-            let asset = AVAsset(url: videoURL)
-
-            do {
-                let assetReader = try AVAssetReader(asset: asset)
-
-                guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-                    print("No video track found in the asset.")
-                    return
-                }
-
-                let videoOutputSettings: [String: Any] = [
-                    kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
-                    kCVPixelBufferMetalCompatibilityKey as String: true
-                ]
-                let videoOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: videoOutputSettings)
-
-                if assetReader.canAdd(videoOutput) {
-                    assetReader.add(videoOutput)
-                } else {
-                    print("Cannot add video output to asset reader.")
-                    return
-                }
-
-                assetReader.startReading()
-
-                while let sampleBuffer = videoOutput.copyNextSampleBuffer() {
-                    let texture = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
-                    let timestamp = try self.timestamp(sampleBuffer: sampleBuffer)
-                    delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestamp)
-                }
-
-            } catch {
-                print("Error setupAssetReader: \(error)")
+            
+            let videoOutputSettings: [String: Any] = [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+                kCVPixelBufferMetalCompatibilityKey as String: true
+            ]
+            let videoOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: videoOutputSettings)
+            
+            if assetReader.canAdd(videoOutput) {
+                assetReader.add(videoOutput)
+            } else {
+                print("Cannot add video output to asset reader.")
+                return
             }
+            
+            assetReader.startReading()
+            
+            while let sampleBuffer = videoOutput.copyNextSampleBuffer() {
+                let texture = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
+                let timestamp = try self.timestamp(sampleBuffer: sampleBuffer)
+                delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestamp)
+            }
+            
+        } catch {
+            print("Error setupAssetReader: \(error)")
         }
-
-//    func setupAssetReader() {
-//        guard let videoURL = Bundle.main.url(forResource: "demoVideo", withExtension: "mp4") else {
-//            print("Video file not found.")
-//            return
-//        }
-//
-//        let asset = AVAsset(url: videoURL)
-//
-//        do {
-//            let assetReader = try AVAssetReader(asset: asset)
-//
-//            guard let videoTrack = asset.tracks(withMediaType: .video).first else {
-//                print("No video track found in the asset.")
-//                return
-//            }
-//
-//            let videoOutputSettings: [String: Any] = [
-//                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32ARGB,
-//                kCVPixelBufferMetalCompatibilityKey as String: true
-//            ]
-//            let videoOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: videoOutputSettings)
-//
-//            if assetReader.canAdd(videoOutput) {
-//                assetReader.add(videoOutput)
-//            } else {
-//                print("Cannot add video output to asset reader.")
-//                return
-//            }
-//
-//            assetReader.startReading()
-//
-//            try! self.initializeTextureCache()
-//
-//            while let sampleBuffer = videoOutput.copyNextSampleBuffer() {
-////                debugPrint("did copyNextSampleBuffer")
-//                let texture = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
-//                let timestamp = try self.timestamp(sampleBuffer: sampleBuffer) // возможно в этом проблема тк в видео уже есть таймстемп
-//                delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestamp)
-//            }
-//
-//        } catch {
-//            print("Error setupAssetReader: \(error)")
-//        }
-//    }
+    }
 }
