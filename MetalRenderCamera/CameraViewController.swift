@@ -11,20 +11,38 @@ import Metal
 
 internal final class CameraViewController: MTKViewController {
     var session: MetalCameraSession?
-    
+
+    var startButton: UIButton = {
+        let button = UIButton()
+        button.setTitle("START", for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        return button
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupStartButton()
         session = MetalCameraSession(delegate: self)
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        session?.start()
     }
 
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
         session?.stop()
+    }
+
+    func setupStartButton() {
+        view.addSubview(startButton)
+        startButton.center = view.center
+        startButton.frame = CGRect(x: 100, y: 100, width: 100, height: 100)
+        startButton.addTarget(self, action: #selector(startButtonDidTap), for: .touchUpInside)
+    }
+
+    @objc func startButtonDidTap() {
+        session?.start()
     }
 }
 
