@@ -12,16 +12,30 @@ import Metal
 internal final class CameraViewController: MTKViewController {
     var session: MetalCameraSession?
 
-    var startButton: UIButton = {
-        let button = UIButton()
-        button.setTitle("START", for: .normal)
-        button.setTitleColor(.white, for: .normal)
+    var displayLink: CADisplayLink?
+    var lastTimestamp: CFTimeInterval = 0
+    
+    var videoDidStart: Bool = false
+    var barButtonTitle: String {
+        videoDidStart ? "Stop" : "Start"
+    }
+    lazy var startButton: UIBarButtonItem = {
+        let button = UIBarButtonItem(title: barButtonTitle, style: .plain, target: self, action: #selector(startButtonDidTap))
         return button
     }()
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupStartButton()
+        
+        displayLink = CADisplayLink(target: self, selector: #selector(render))
+        if #available(iOS 10.0, *) {
+            displayLink?.preferredFramesPerSecond = 60
+        } else {
+            // Fallback on earlier versions
+        }
+        displayLink?.add(to: .main, forMode: .defaultRunLoopMode)
+        
         session = MetalCameraSession(delegate: self)
     }
     
@@ -33,16 +47,32 @@ internal final class CameraViewController: MTKViewController {
         super.viewDidDisappear(animated)
         session?.stop()
     }
+    
+    deinit {
+        displayLink?.invalidate()
+    }
+    
+    @objc func render() {
+            guard let texture = self.texture else { return }
+        
+        let drawable = metalView.currentDrawable
+            // Здесь вы можете выполнить отрисовку текстуры на Metal
+            // Например, вызов метода для обновления интерфейса с использованием текстуры
+            // render(texture: texture)
+            
+            // Также можете использовать lastTimestamp для управления временем, если это нужно
+    }
 
     func setupStartButton() {
-        view.addSubview(startButton)
-        startButton.center = view.center
-        startButton.frame = CGRect(x: 100, y: 100, width: 100, height: 100)
-        startButton.addTarget(self, action: #selector(startButtonDidTap), for: .touchUpInside)
+        navigationItem.rightBarButtonItem = startButton
     }
 
     @objc func startButtonDidTap() {
-        session?.start()
+        videoDidStart.toggle()
+        startButton.title = barButtonTitle
+        if videoDidStart {
+            session?.start()
+        }
     }
 }
 
@@ -51,6 +81,7 @@ extension CameraViewController: MetalCameraSessionDelegate {
     func metalCameraSession(_ session: MetalCameraSession, didReceiveFrameAsTextures textures: [MTLTexture], withTimestamp timestamp: Double) {
         self.texture = textures[0]
         self.metalView.draw()
+        print(">>> ⏰ Received frame at timestamp: \(timestamp) seconds")
     }
     
     func metalCameraSession(_ cameraSession: MetalCameraSession, didUpdateState state: MetalCameraSessionState, error: MetalCameraSessionError?) {

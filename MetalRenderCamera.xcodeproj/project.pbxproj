@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8C091B5C2CA3006000C1F40F /* demoVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 8C091B5B2CA3005F00C1F40F /* demoVideo.mp4 */; };
 		FA00A6B21CD54552005CF485 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA00A6B11CD54552005CF485 /* AppDelegate.swift */; };
 		FA00A6B71CD54552005CF485 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FA00A6B51CD54552005CF485 /* Main.storyboard */; };
 		FA00A6B91CD54552005CF485 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA00A6B81CD54552005CF485 /* Assets.xcassets */; };
@@ -32,6 +33,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8C091B5B2CA3005F00C1F40F /* demoVideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = demoVideo.mp4; sourceTree = "<group>"; };
 		FA00A6AE1CD54552005CF485 /* Metal Camera.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Metal Camera.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA00A6B11CD54552005CF485 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FA00A6B61CD54552005CF485 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 		FA00A6B01CD54552005CF485 /* MetalRenderCamera */ = {
 			isa = PBXGroup;
 			children = (
+				8C091B5B2CA3005F00C1F40F /* demoVideo.mp4 */,
 				FA00A6D11CD54611005CF485 /* Metal Camera Session */,
 				FA00A6D01CD545FE005CF485 /* MetalKit View Controller */,
 				FA00A6C51CD545F4005CF485 /* CameraViewController.swift */,
@@ -204,6 +207,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -223,6 +227,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8C091B5C2CA3006000C1F40F /* demoVideo.mp4 in Resources */,
 				FA00A6BC1CD54552005CF485 /* LaunchScreen.storyboard in Resources */,
 				FA00A6B91CD54552005CF485 /* Assets.xcassets in Resources */,
 				FA00A6B71CD54552005CF485 /* Main.storyboard in Resources */,

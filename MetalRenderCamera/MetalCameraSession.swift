@@ -319,37 +319,37 @@ extension MetalCameraSession: AVCaptureVideoDataOutputSampleBufferDelegate {
      
      - returns: Double value for a timestamp in seconds or nil
      */
-    private func timestamp(sampleBuffer: CMSampleBuffer?) throws -> Double {
+    private func timestamp(sampleBuffer: CMSampleBuffer?) throws -> CMTime {
         guard let sampleBuffer = sampleBuffer else {
             throw MetalCameraSessionError.missingSampleBuffer
         }
         
-        let time = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
+        let timestamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
         
-        guard time != kCMTimeInvalid else {
+        guard timestamp != kCMTimeInvalid else {
             throw MetalCameraSessionError.failedToRetrieveTimestamp
         }
         
-        return (Double)(time.value) / (Double)(time.timescale);
+        return timestamp
     }
     
     public func captureOutput(_ captureOutput: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         do {
             var textures: [MTLTexture]!
             
-            switch pixelFormat {
-            case .rgb:
-                let textureRGB = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
-                textures = [textureRGB]
-            case .yCbCr:
-                let textureY = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache, planeIndex: 0, pixelFormat: .r8Unorm)
-                let textureCbCr = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache, planeIndex: 1, pixelFormat: .rg8Unorm)
-                textures = [textureY, textureCbCr]
-            }
+//            switch pixelFormat {
+//            case .rgb:
+//                let textureRGB = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
+//                textures = [textureRGB]
+//            case .yCbCr:
+//                let textureY = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache, planeIndex: 0, pixelFormat: .r8Unorm)
+//                let textureCbCr = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache, planeIndex: 1, pixelFormat: .rg8Unorm)
+//                textures = [textureY, textureCbCr]
+//            }
+//            
+//            let timestamp = try self.timestamp(sampleBuffer: sampleBuffer)
             
-            let timestamp = try self.timestamp(sampleBuffer: sampleBuffer)
-            
-            delegate?.metalCameraSession(self, didReceiveFrameAsTextures: textures, withTimestamp: timestamp)
+//            delegate?.metalCameraSession(self, didReceiveFrameAsTextures: textures, withTimestamp: timestamp)
         }
         catch let error as MetalCameraSessionError {
             self.handleError(error)
@@ -391,21 +391,42 @@ extension MetalCameraSession {
             ]
             let videoOutput = AVAssetReaderTrackOutput(track: videoTrack, outputSettings: videoOutputSettings)
             
-            if assetReader.canAdd(videoOutput) {
-                assetReader.add(videoOutput)
-            } else {
+            guard assetReader.canAdd(videoOutput) else {
                 print("Cannot add video output to asset reader.")
                 return
             }
+            assetReader.add(videoOutput)
             
             assetReader.startReading()
             
-            while let sampleBuffer = videoOutput.copyNextSampleBuffer() {
+            var previousTimestamp: CMTime? = nil
+            while assetReader.status == .reading  {
+                guard let sampleBuffer = videoOutput.copyNextSampleBuffer() else {
+                    print("No available sample buffers")
+                    break
+                }
+                let currentTimestamp = try self.timestamp(sampleBuffer: sampleBuffer)
+                if let previousTimestamp {
+                    let timeDifference = CMTimeSubtract(currentTimestamp, previousTimestamp)
+                    let timeDifferenceInSeconds = CMTimeGetSeconds(timeDifference)
+                    
+                    if timeDifferenceInSeconds > 0 {
+                        usleep(useconds_t(timeDifferenceInSeconds * 1_000_000))
+                    }
+                }
+                previousTimestamp = currentTimestamp
+                let timestampInDouble = CMTimeGetSeconds(currentTimestamp)
+                
                 let texture = try texture(sampleBuffer: sampleBuffer, textureCache: textureCache)
-                let timestamp = try self.timestamp(sampleBuffer: sampleBuffer)
-                delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestamp)
+                delegate?.metalCameraSession(self, didReceiveFrameAsTextures: [texture], withTimestamp: timestampInDouble)
             }
             
+            if assetReader.status == .completed {
+                print(">>> ✅ Video playback completed.")
+                // Добавьте здесь логику завершения видео (например, уведомление delegate или завершение сессии)
+            } else if assetReader.status == .failed {
+                print(">>> 😢 Video playback failed with error: \(assetReader.error?.localizedDescription ?? "Unknown error")")
+            }
         } catch {
             print("Error setupAssetReader: \(error)")
         }
