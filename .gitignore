@@ -63,3 +63,4 @@ fastlane/report.xml
 fastlane/screenshots
 .DS_Store
 *.mp4
+MetalRenderCamera.xcodeproj/project.xcworkspace/xcshareddata
