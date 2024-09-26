@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8C091B5C2CA3006000C1F40F /* demoVideo.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 8C091B5B2CA3005F00C1F40F /* demoVideo.mp4 */; };
+		8CC358A82CA3F805003AE1C0 /* MetalVideoRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CC358A72CA3F805003AE1C0 /* MetalVideoRenderer.swift */; };
 		FA00A6B21CD54552005CF485 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA00A6B11CD54552005CF485 /* AppDelegate.swift */; };
 		FA00A6B71CD54552005CF485 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FA00A6B51CD54552005CF485 /* Main.storyboard */; };
 		FA00A6B91CD54552005CF485 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FA00A6B81CD54552005CF485 /* Assets.xcassets */; };
@@ -34,6 +35,7 @@
 
 /* Begin PBXFileReference section */
 		8C091B5B2CA3005F00C1F40F /* demoVideo.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = demoVideo.mp4; sourceTree = "<group>"; };
+		8CC358A72CA3F805003AE1C0 /* MetalVideoRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetalVideoRenderer.swift; sourceTree = "<group>"; };
 		FA00A6AE1CD54552005CF485 /* Metal Camera.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Metal Camera.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FA00A6B11CD54552005CF485 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		FA00A6B61CD54552005CF485 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -127,6 +129,7 @@
 				FA00A6C61CD545F4005CF485 /* MetalCameraSession.swift */,
 				FA00A6C71CD545F4005CF485 /* MetalCameraSessionTypes.swift */,
 				FABC1DE81D46296C00F0B64B /* MetalCameraCaptureDevice.swift */,
+				8CC358A72CA3F805003AE1C0 /* MetalVideoRenderer.swift */,
 			);
 			name = "Metal Camera Session";
 			sourceTree = "<group>";
@@ -252,6 +255,7 @@
 				FA00A6CF1CD545F4005CF485 /* Shaders.metal in Sources */,
 				FA00A6CD1CD545F4005CF485 /* MetalCameraSessionTypes.swift in Sources */,
 				FA00A6B21CD54552005CF485 /* AppDelegate.swift in Sources */,
+				8CC358A82CA3F805003AE1C0 /* MetalVideoRenderer.swift in Sources */,
 				FA00A6CB1CD545F4005CF485 /* CameraViewController.swift in Sources */,
 				FA00A6CC1CD545F4005CF485 /* MetalCameraSession.swift in Sources */,
 				FA00A6CE1CD545F4005CF485 /* MTKViewController.swift in Sources */,
@@ -406,7 +410,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = BVF7C6H94K;
 				INFOPLIST_FILE = MetalRenderCamera/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.oldyellowbricks.MetalRenderCamera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -422,7 +426,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				DEVELOPMENT_TEAM = BVF7C6H94K;
 				INFOPLIST_FILE = MetalRenderCamera/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.oldyellowbricks.MetalRenderCamera;
 				PRODUCT_NAME = "$(TARGET_NAME)";
